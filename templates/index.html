@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Marketplace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<body>
+
+    <header class="navbar">
+        <h1>Campus Marketplace</h1>
+        <nav class="nav-links">
+            <a href="#" class="active">Marketplace</a>
+            <a href="#">My Listings</a>
+            <a href="#">Profile</a>
+            <a href="#">Logout</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="control-panel">
+            <div class="search-bar">
+                <input type="text" placeholder="🔍 Search listings...">
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select><option>All Categories</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Conditions</label>
+                    <select><option>All Conditions</option></select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select><option>Newest First</option></select>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="results-text">Result: 2 Item(s) Found</h2>
+        
+        <section class="product-grid">
+            <article class="product-card">
+                <div class="product-image-placeholder">🖼️</div>
+                <div class="product-info">
+                    <h3 class="product-title">Product 1</h3>
+                    <p class="seller-name">Seller Name</p>
+                    <p class="product-desc">Product 1 Description</p>
+                    <p class="product-price">$1</p>
+                </div>
+            </article>
+
+            <article class="product-card">
+                <div class="product-image-placeholder">🖼️</div>
+                <div class="product-info">
+                    <h3 class="product-title">Product 2</h3>
+                    <p class="seller-name">Seller Name</p>
+                    <p class="product-desc">Product 2 Description</p>
+                    <p class="product-price">$2</p>
+                </div>
+            </article>
+        </section>
+    </main>
+
+</body>
+</html>

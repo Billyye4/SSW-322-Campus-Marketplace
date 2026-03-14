@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.title }} - Campus Marketplace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <h1>Campus Marketplace</h1>
+        <nav class="nav-links">
+            <a href="/">Marketplace</a>
+            <a href="#">My Listings</a>
+            <a href="#">Profile</a>
+            <a href="#">Logout</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="/" class="back-link">← Back</a>
+
+        <div class="product-split-layout">
+            
+            <div class="large-image-placeholder">
+                🖼️
+            </div>
+
+            <div class="product-details-column">
+                <h1 class="detail-title">{{ product.title }}</h1>
+                <h2 class="detail-price">${{ "%.2f"|format(product.price) }}</h2>
+
+                <div class="info-box">
+                    <h3 class="box-label">Description</h3>
+                    <p>{{ product.description }}</p>
+                    <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">Condition: {{ product.condition }}</p>
+                </div>
+
+                <div class="info-box seller-box">
+                    <span class="box-label" style="margin-bottom: 0;">Seller</span>
+                    <span class="rating-display">
+                        <svg style="width: 18px; height: 18px;" fill="#f59e0b" viewBox="0 0 24 24">
+                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
+                        </svg>
+                        <strong>{{ product.seller_rating }}/5</strong> ({{ product.reviews }} Reviews)
+                    </span>
+                </div>
+
+                <form action="/buy/{{ product.id }}" method="POST" style="text-align: center;">
+                    <button type="submit" class="buy-button">Buy Now</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

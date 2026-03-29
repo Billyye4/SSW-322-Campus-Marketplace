@@ -11,10 +11,17 @@
     <header class="navbar">
         <h1>Campus Marketplace</h1>
         <nav class="nav-links">
-            <a href="/">Marketplace</a>
-            <a href="#">My Listings</a>
-            <a href="#">Profile</a>
-            <a href="#">Logout</a>
+            <a href="/marketplace">Marketplace</a>
+            
+            {% if session.get('user_id') %}
+                <a href="/dashboard">My Listings</a>
+                <a href="#">Profile</a>
+                <a href="/logout">Logout</a> 
+            {% else %}
+                <a href="/">Log In</a>
+                <a href="/signup">Sign Up</a>
+            {% endif %}
+            
         </nav>
     </header>
 
@@ -23,9 +30,7 @@
 
         <div class="product-split-layout">
             
-            <div class="large-image-placeholder">
-                🖼️
-            </div>
+            <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="product-image">
 
             <div class="product-details-column">
                 <h1 class="detail-title">{{ product.title }}</h1>

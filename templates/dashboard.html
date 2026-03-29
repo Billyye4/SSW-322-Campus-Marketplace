@@ -11,10 +11,17 @@
     <header class="navbar">
         <h1>Campus Marketplace</h1>
         <nav class="nav-links">
-            <a href="/">Marketplace</a>
-            <a href="/dashboard" class="active">My Listings</a>
-            <a href="#">Profile</a>
-            <a href="#">Logout</a>
+            <a href="/marketplace">Marketplace</a>
+            
+            {% if session.get('user_id') %}
+                <a href="/dashboard">My Listings</a>
+                <a href="#">Profile</a>
+                <a href="/logout">Logout</a> 
+            {% else %}
+                <a href="/">Log In</a>
+                <a href="/signup">Sign Up</a>
+            {% endif %}
+            
         </nav>
     </header>
 
@@ -37,19 +44,17 @@
                 <div class="info-box" style="margin-bottom: 30px;">
                     <h3 style="margin-bottom: 15px; color: #374151;">+ Create New Listing</h3>
                     
-                    <form action="/dashboard" method="POST" class="listing-form">
+                    <form action="/dashboard" method="POST" enctype="multipart/form-data" class="listing-form">
                         <input type="text" name="title" placeholder="Listing Title (e.g., Calculus Textbook)" required>
                         
                         <div class="form-row">
                             <input type="number" name="price" placeholder="Price ($)" step="0.01" min="0" required>
-                            
                             <select name="category" required>
                                 <option value="" disabled selected>Select Category...</option>
                                 <option value="Books">Books</option>
                                 <option value="Electronics">Electronics</option>
                                 <option value="Music">Music</option>
                             </select>
-                            
                             <select name="condition" required>
                                 <option value="" disabled selected>Select Condition...</option>
                                 <option value="Like New">Like New</option>
@@ -58,9 +63,22 @@
                             </select>
                         </div>
                         
-                        <textarea name="description" rows="3" placeholder="Describe your item details, any flaws, etc." required></textarea>
+                     <textarea name="description" rows="3" placeholder="Describe your item details, any flaws, etc." required></textarea>
                         
-                        <button type="submit" class="buy-button" style="width: auto; padding: 10px 24px; margin-top: 5px;">Post Listing</button>
+                        <div style="margin-top: 15px; margin-bottom: 15px;">
+                            <label style="font-size: 13px; color: #6b7280; font-weight: bold; display: block; margin-bottom: 5px;">Upload Image (Optional)</label>
+                            
+                            <input type="file" name="image_file" id="image_file" accept="image/*" style="display: none;">
+                            
+                            <label for="image_file" class="custom-file-button">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                <span id="file-name-text">Click to choose an image...</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="buy-button" style="width: auto; padding: 10px 24px;">Post Listing</button>
                     </form>
                 </div>
 
@@ -73,7 +91,7 @@
                         {% for item in my_listings %}
                         <a href="/product/{{ item.id }}" style="text-decoration: none; color: inherit;">
                             <article class="product-card">
-                                <div class="product-image-placeholder">🖼️</div>
+                                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="product-image">
                                 <div class="product-info">
                                     <h3 class="product-title">{{ item.title }}</h3>
                                     <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
@@ -106,6 +124,12 @@
 
         </div>
     </main>
-
+    <script>
+        // Update the custom file button text with the selected filename
+        document.getElementById('image_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Click to choose an image...';
+            document.getElementById('file-name-text').textContent = fileName;
+        });
+    </script>
 </body>
 </html>

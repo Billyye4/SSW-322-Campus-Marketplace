@@ -619,7 +619,7 @@ body {
 .btn-checkout-large:hover {
     background-color: #f9fafb;
 }
-=======
+/* =========================================
    7. Dashboard Upload Form Styling
 ========================================= */
 .listing-form {
@@ -780,5 +780,5 @@ body {
     background-color: #eff6ff;
     border-color: #3b82f6; /* Snaps to a bright blue outline on hover */
     color: #1e3a8a;
-=======
+
 }

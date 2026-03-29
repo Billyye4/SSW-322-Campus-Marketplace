@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - Campus Marketplace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <h1>Campus Marketplace</h1>
+        <nav class="nav-links">
+            <a href="/">Marketplace</a>
+            <a href="/dashboard" class="active">My Listings</a>
+            <a href="#">Profile</a>
+            <a href="#">Logout</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash-message" style="margin-bottom: 20px;">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <h2 style="margin-bottom: 20px;">Seller Dashboard</h2>
+
+        <div class="dashboard-layout">
+            
+            <section class="my-listings-column">
+                
+                <div class="info-box" style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px; color: #374151;">+ Create New Listing</h3>
+                    
+                    <form action="/dashboard" method="POST" class="listing-form">
+                        <input type="text" name="title" placeholder="Listing Title (e.g., Calculus Textbook)" required>
+                        
+                        <div class="form-row">
+                            <input type="number" name="price" placeholder="Price ($)" step="0.01" min="0" required>
+                            
+                            <select name="category" required>
+                                <option value="" disabled selected>Select Category...</option>
+                                <option value="Books">Books</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Music">Music</option>
+                            </select>
+                            
+                            <select name="condition" required>
+                                <option value="" disabled selected>Select Condition...</option>
+                                <option value="Like New">Like New</option>
+                                <option value="Used - Good">Used - Good</option>
+                                <option value="Used - Fair">Used - Fair</option>
+                            </select>
+                        </div>
+                        
+                        <textarea name="description" rows="3" placeholder="Describe your item details, any flaws, etc." required></textarea>
+                        
+                        <button type="submit" class="buy-button" style="width: auto; padding: 10px 24px; margin-top: 5px;">Post Listing</button>
+                    </form>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #374151;">My Active Listings</h3>
+                
+                {% if my_listings|length == 0 %}
+                    <p style="color: #6b7280; padding: 20px; background-color: #ffffff; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;">You don't have any active listings right now. Use the form above to add one!</p>
+                {% else %}
+                    <div class="product-grid">
+                        {% for item in my_listings %}
+                        <a href="/product/{{ item.id }}" style="text-decoration: none; color: inherit;">
+                            <article class="product-card">
+                                <div class="product-image-placeholder">🖼️</div>
+                                <div class="product-info">
+                                    <h3 class="product-title">{{ item.title }}</h3>
+                                    <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
+                                </div>
+                            </article>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+
+            <aside class="recent-sidebar">
+                <h3 style="margin-bottom: 15px; color: #374151; font-size: 16px;">Campus Activity: Recently Listed</h3>
+                
+                <div class="sidebar-feed">
+                    {% for item in recent_items %}
+                    <a href="/product/{{ item.id }}" class="sidebar-card-link">
+                        <article class="sidebar-card">
+                            <div class="sidebar-img">🖼️</div>
+                            <div class="sidebar-info">
+                                <h4 class="sidebar-title">{{ item.title }}</h4>
+                                <p class="sidebar-price">${{ "%.2f"|format(item.price) }}</p>
+                                <p class="sidebar-date">Added: {{ item.date_added }}</p>
+                            </div>
+                        </article>
+                    </a>
+                    {% endfor %}
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+</body>
+</html>

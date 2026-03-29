@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout - Campus Marketplace</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header class="navbar">
+      <h1>Campus Marketplace</h1>
+      <nav class="nav-links">
+          <a href="/" class="active">Marketplace</a>
+          <a href="#">My Listings</a>
+          <a href="#">Profile</a>
+          <a href="#">Logout</a>
+      </nav>
+  </header>
+
+  <main class="checkout-container">
+    
+    <div class="checkout-details">
+      
+      <div class="card product-card">
+        <div class="product-image-placeholder">
+          <span>🖼️</span>
+        </div>
+        <div class="product-info">
+          <div class="product-header">
+            <h3>{{ product.title }}</h3>
+            <span class="price">${{ "%.2f"|format(product.price) }}</span>
+          </div>
+          <p class="description">{{ product.description }}</p>
+          <div class="product-actions">
+            <div class="links">
+              <a href="#">Delete</a> | <a href="#">Save for Later</a>
+            </div>
+            <div class="quantity-selector">
+              <span>Quantity</span>
+              <button>-</button>
+              <input type="number" value="1" readonly>
+              <button>+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card section-card">
+        <h4>Choose Payment</h4>
+        <label class="radio-option">
+          <input type="radio" name="payment" checked>
+          <span>💳 Visa ending in 1234</span>
+        </label>
+        <a href="#" class="add-link">Add new card</a>
+      </div>
+
+      <div class="card section-card">
+        <h4>Select Meetup Location</h4>
+        <div class="address-grid">
+          
+          <div class="address-box selected">
+            <span style="font-size: 24px; display: block; margin-bottom: 8px;">🏛️</span>
+            <p>Student Center</p>
+          </div>
+          
+          <div class="address-box">
+            <span style="font-size: 24px; display: block; margin-bottom: 8px;">📚</span>
+            <p>Main Library</p>
+          </div>
+          
+          <div class="address-box">
+            <span style="font-size: 24px; display: block; margin-bottom: 8px;">☕</span>
+            <p>Campus Cafe</p>
+          </div>
+          
+          <div class="address-box">
+            <span style="font-size: 24px; display: block; margin-bottom: 8px;">💬</span>
+            <p>Decide in Chat</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="order-summary">
+      <div class="summary-line">
+        <span>{{ product.title }}:</span>
+        <span>${{ "%.2f"|format(product.price) }}</span>
+      </div>
+      
+      <div class="summary-line">
+        <span>Tax (7%):</span>
+        <span>${{ "%.2f"|format(product.price * 0.07) }}</span>
+      </div>
+      <div class="summary-line total">
+        <span>Total:</span>
+        <span>${{ "%.2f"|format(product.price + (product.price * 0.07)) }}</span>
+      </div>
+
+      <div class="promo-code">
+        <input type="text" placeholder="Add promo code">
+        <button class="btn-add">Add</button>
+      </div>
+
+      <button class="btn-checkout">Complete Purchase</button>
+    </div>
+
+  </main>
+  <script>
+    // Wait for the page to fully load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Grab all the location boxes
+      const locationBoxes = document.querySelectorAll('.address-box');
+
+      // Add a click listener to each box
+      locationBoxes.forEach(box => {
+        box.addEventListener('click', () => {
+          // 1. Remove the 'selected' class from ALL boxes
+          locationBoxes.forEach(b => b.classList.remove('selected'));
+          
+          // 2. Add the 'selected' class ONLY to the box that was just clicked
+          box.classList.add('selected');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

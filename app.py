@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
@@ -82,6 +82,25 @@ def product_detail(product_id):
     
     if product:
         return render_template('product.html', product=product)
+    return "Product not found", 404
+
+# This handles the "Buy Now" button click
+@app.route('/buy/<int:product_id>', methods=['POST'])
+def buy_product(product_id):
+    # In the future, you could add logic here (like checking if the item is still in stock).
+    # For now, we just instantly redirect the user to the checkout page!
+    return redirect(url_for('checkout_page', product_id=product_id))
+
+# This actually displays the Checkout HTML page
+@app.route('/checkout/<int:product_id>')
+def checkout_page(product_id):
+    # Find the specific product so we can show its price/title on the checkout screen
+    product = next((p for p in dummy_products if p['id'] == product_id), None)
+    
+    if product:
+        # Assuming you saved the checkout code I gave you earlier as 'checkout.html'
+        return render_template('checkout.html', product=product)
+    
     return "Product not found", 404
 
 if __name__ == '__main__':

@@ -185,13 +185,12 @@ body {
 ========================================= */
 .dashboard-layout {
     display: grid;
-    /* Left column gets roughly 70%, right gets 30% */
     grid-template-columns: 2.5fr 1fr; 
     gap: 30px;
 }
 
-.main-marketplace-content {
-    /* Ensures the main content area handles its own width properly */
+/* THIS WAS MISSING: Fixes the grid blowout on both main marketplace and dashboard */
+.main-marketplace-content, .my-listings-column {
     min-width: 0; 
 }
 
@@ -200,7 +199,6 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    /* Keeps sidebar sticky near the top if the page scrolls */
     align-self: start; 
     position: sticky;
     top: 20px;
@@ -246,7 +244,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    overflow: hidden; /* Prevents text overflow */
+    overflow: hidden;
 }
 
 .sidebar-title {
@@ -296,7 +294,7 @@ body {
 .large-image-placeholder {
     background-color: #e5e7eb;
     border-radius: 12px;
-    aspect-ratio: 1; /* Makes it a perfect square */
+    aspect-ratio: 1; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -364,4 +362,73 @@ body {
 
 .buy-button:hover {
     background-color: #333333;
+}
+
+/* =========================================
+   7. Dashboard Upload Form Styling
+========================================= */
+.listing-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.listing-form input[type="text"],
+.listing-form input[type="number"],
+.listing-form select,
+.listing-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    font-size: 14px;
+    color: #374151;
+    transition: border-color 0.2s;
+}
+
+.listing-form input:focus,
+.listing-form select:focus,
+.listing-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background-color: #ffffff;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row > * {
+    flex: 1;
+}
+
+/* =========================================
+   8. THIS WAS MISSING: Responsive Design
+========================================= */
+@media (max-width: 850px) {
+    /* Stack the dashboard columns */
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stop the sidebar from being sticky when it drops to the bottom */
+    .recent-sidebar {
+        position: static;
+        margin-top: 20px;
+    }
+
+    /* Stack the 3-part form row on smaller screens */
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    /* Make the navigation bar elements wrap gracefully */
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+    }
 }

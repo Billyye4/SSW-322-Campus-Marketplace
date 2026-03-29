@@ -1,18 +1,20 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 
 app = Flask(__name__)
-app.secret_key = "super_secret_campus_key"
+app.secret_key = "super_secret_campus_key" 
 
-# 1. Configure the SQLite database
-# This tells Flask to create a file called 'marketplace.db' in your project folder
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# 2. Define the Product Database Model
-# This replaces the dummy dictionaries. Each attribute becomes a column in the database.
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False) 
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -25,10 +27,8 @@ class Product(db.Model):
     category = db.Column(db.String(50), nullable=False)
     date_added = db.Column(db.String(20), nullable=False)
 
-# 3. Initialize the database with our starter data
 with app.app_context():
     db.create_all()
-    # If the database is completely empty, add our 3 starter items
     if not Product.query.first():
         starter_items = [
             Product(title="Funkadelic Maggot Brain Vinyl", seller="VinylCollector99", seller_rating=4.9, reviews=12, description="Classic funk rock album. Sleeve is in near-mint condition.", price=25.00, condition="Used - Good", category="Music", date_added="2026-03-10"),
@@ -38,20 +38,73 @@ with app.app_context():
         db.session.bulk_save_objects(starter_items)
         db.session.commit()
 
-# --- HOME ROUTE ---
-@app.route('/')
-def home():
+# --- AUTHENTICATION ROUTES (Now at the root "/") ---
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    # If they are already logged in, send them straight to the marketplace
+    if 'user_id' in session:
+        return redirect(url_for('marketplace'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash(f"Welcome back, {user.username}!")
+            return redirect(url_for('marketplace')) # Redirects to marketplace upon login
+        else:
+            flash("Invalid username or password.")
+            
+    return render_template('login.html')
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    if User.query.filter_by(username=username).first():
+        flash("Username already exists. Please choose another.")
+        return redirect(url_for('login'))
+        
+    hashed_pw = generate_password_hash(password)
+    new_user = User(username=username, password_hash=hashed_pw)
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    session['user_id'] = new_user.id
+    session['username'] = new_user.username
+    flash("Account created successfully!")
+    return redirect(url_for('marketplace'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("You have been logged out.")
+    return redirect(url_for('login'))
+
+# --- MARKETPLACE ROUTE (Moved from "/") ---
+
+@app.route('/marketplace')
+def marketplace():
+    # KICKER: Only logged in users can see the marketplace!
+    if 'user_id' not in session:
+        flash("Please log in to view the marketplace.")
+        return redirect(url_for('login'))
+
     search_query = request.args.get('search', '').lower()
     condition_query = request.args.get('condition', 'All Conditions')
     category_query = request.args.get('category', 'All Categories')
     sort_query = request.args.get('sort', 'Newest First')
     
-    # Query all products from the database!
     products = Product.query.all()
     filtered_products = []
     
     for product in products:
-        # Notice we use dot notation (product.title) instead of dictionary syntax now
         matches_search = search_query in product.title.lower() or search_query in product.description.lower() or search_query == ''
         matches_condition = condition_query == 'All Conditions' or condition_query == product.condition
         matches_category = category_query == 'All Categories' or category_query == product.category
@@ -68,68 +121,56 @@ def home():
     elif sort_query == 'Oldest First':
         filtered_products.sort(key=lambda x: x.date_added)
 
-    # Use a direct database query to get the 3 newest items for the sidebar
     recent_items = Product.query.order_by(Product.date_added.desc()).limit(3).all()
+    # Now rendering marketplace.html instead of index.html
+    return render_template('marketplace.html', products=filtered_products, recent_items=recent_items)
 
-    return render_template('index.html', products=filtered_products, recent_items=recent_items)
-
-# --- SINGLE PRODUCT ROUTE ---
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
-    # This automatically throws a 404 error if the ID doesn't exist in the DB
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     product = Product.query.get_or_404(product_id)
     return render_template('product.html', product=product)
 
-# --- DUMMY PAYMENT ROUTE ---
 @app.route('/buy/<int:product_id>', methods=['POST'])
 def buy_product(product_id):
     product = Product.query.get_or_404(product_id)
     flash(f"Success! You just 'purchased' {product.title} for ${product.price:.2f}")
-    
-    # Optional: If you wanted items to disappear when bought, you would run this:
-    # db.session.delete(product)
-    # db.session.commit()
-    
-    return redirect(url_for('home'))
+    return redirect(url_for('marketplace'))
 
-# --- SELLER DASHBOARD (My Listings) ---
-# Added methods=['GET', 'POST'] to allow form submissions
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
+    if 'user_id' not in session:
+        flash("Please log in to view your dashboard.")
+        return redirect(url_for('login'))
+
     if request.method == 'POST':
-        # 1. Grab all the data from the HTML form
         title = request.form.get('title')
         price = request.form.get('price')
         category = request.form.get('category')
         condition = request.form.get('condition')
         description = request.form.get('description')
         
-        # 2. Package it into a new Product database object
         new_listing = Product(
             title=title,
-            seller="Seller",  # We are setting you as the permanent seller for these!
-            seller_rating=5.0, # Start with a perfect 5 stars
+            seller=session['username'],
+            seller_rating=5.0,
             reviews=0,
             description=description,
             price=float(price),
             condition=condition,
             category=category,
-            date_added=date.today().strftime("%Y-%m-%d") # Automatically grabs today's date
+            date_added=date.today().strftime("%Y-%m-%d")
         )
         
-        # 3. Save it to the database permanently
         db.session.add(new_listing)
         db.session.commit()
-        
-        # 4. Flash a success message and reload the page
         flash(f"Successfully listed: {title}!")
         return redirect(url_for('dashboard'))
 
-    # If it's just a normal GET request (loading the page):
     recent_items = Product.query.order_by(Product.date_added.desc()).limit(3).all()
-    
-    # We filter the left column to ONLY show items where the seller is "Billy"
-    my_active_listings = Product.query.filter_by(seller="Billy").all()
+    my_active_listings = Product.query.filter_by(seller=session['username']).all()
 
     return render_template('dashboard.html', my_listings=my_active_listings, recent_items=recent_items)
 

@@ -409,7 +409,7 @@ body {
 ========================================= */
 @media (max-width: 850px) {
     /* Stack the dashboard columns */
-    .dashboard-layout {
+    .dashboard-layout, .product-split-layout {
         grid-template-columns: 1fr;
     }
     

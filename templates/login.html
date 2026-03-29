@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Campus Marketplace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <h1>Campus Marketplace</h1>
+        <nav class="nav-links">
+            <a href="/">Marketplace</a>
+        </nav>
+    </header>
+
+    <main class="container" style="max-width: 800px; margin-top: 60px;">
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash-message">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="product-split-layout">
+            
+            <div class="info-box">
+                <h2 style="margin-bottom: 20px;">Welcome Back</h2>
+                <form action="/login" method="POST" class="listing-form">
+                    <input type="text" name="username" placeholder="Username" required>
+                    <input type="password" name="password" placeholder="Password" required>
+                    <button type="submit" class="buy-button" style="margin-top: 10px;">Log In</button>
+                </form>
+            </div>
+
+            <div class="info-box" style="background-color: #f9fafb; border: none;">
+                <h2 style="margin-bottom: 20px;">New to Campus?</h2>
+                <p style="color: #6b7280; margin-bottom: 20px; font-size: 14px;">Create an account to start buying and selling with your peers.</p>
+                
+                <form action="/signup" method="POST" class="listing-form">
+                    <input type="text" name="username" placeholder="Choose a Username" required>
+                    <input type="password" name="password" placeholder="Create a Password" required>
+                    <button type="submit" class="buy-button" style="margin-top: 10px; background-color: #2563eb;">Create Account</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

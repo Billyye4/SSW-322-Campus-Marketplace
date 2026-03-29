@@ -189,8 +189,31 @@ def buy_product(product_id):
         flash("Please log in to purchase items.")
         return redirect(url_for('login'))
         
-    # Instantly redirect the user to the checkout page
-    return redirect(url_for('checkout_page', product_id=product_id))
+    product = Product.query.get_or_404(product_id)
+    payment_type = request.form.get('payment_type')
+    
+    # --- NEW: Capture the Meetup Location ---
+    location = request.form.get('meetup_location')
+    if location == 'other':
+        location = request.form.get('custom_location')
+
+    # Update the flash messages to include the location!
+    if payment_type == 'cash':
+        flash(f"Order confirmed! Please meet {product.seller} at the {location} for a cash exchange for '{product.title}'.")
+        
+    elif payment_type == 'new_card':
+        card_name = request.form.get('card_name')
+        card_number = request.form.get('card_number')
+        last_four = card_number[-4:] if card_number else "XXXX"
+        flash(f"Success! Charged ${product.price:.2f} to the card ending in {last_four}. Pick up your item from {product.seller} at the {location}.")
+        
+    else:
+        flash(f"Success! Charged ${product.price:.2f} to your saved Visa. Pick up your item from {product.seller} at the {location}.")
+
+    db.session.delete(product)
+    db.session.commit()
+
+    return redirect(url_for('marketplace'))
 
 @app.route('/checkout/<int:product_id>')
 def checkout_page(product_id):

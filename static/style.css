@@ -152,6 +152,15 @@ body {
     margin-bottom: 15px;
 }
 
+.product-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover; /* This makes sure the image crops nicely instead of squishing */
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background-color: #f3f4f6; /* Acts as a fallback color while loading */
+}
+
 .product-title {
     font-size: 16px;
     margin-bottom: 4px;
@@ -365,7 +374,6 @@ body {
 }
 
 /* =========================================
-<<<<<<< HEAD
    7. Checkout Page Layout
 ========================================= */
 .checkout-container {
@@ -656,7 +664,7 @@ body {
 ========================================= */
 @media (max-width: 850px) {
     /* Stack the dashboard columns */
-    .dashboard-layout {
+    .dashboard-layout, .product-split-layout {
         grid-template-columns: 1fr;
     }
     
@@ -678,5 +686,99 @@ body {
         gap: 15px;
         padding: 15px 20px;
     }
->>>>>>> 85088ece75e88cdc9c5cc6687e88eb1ead78d8ec
+}
+
+/* =========================================
+   9. Auth Pages (Login & Signup)
+========================================= */
+.auth-container {
+    max-width: 450px;
+    margin: 60px auto;
+}
+
+/* Make sure the wrapper takes up the full width */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%; 
+}
+
+/* Force the password input to match the username input perfectly */
+.password-wrapper input {
+    width: 100%;
+    padding: 12px;
+    padding-right: 40px; /* Leaves space so text doesn't hide behind the icon! */
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #f9fafb;
+    font-size: 14px;
+    color: #374151;
+    transition: border-color 0.2s;
+}
+
+.password-wrapper input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background-color: #ffffff;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.toggle-password:hover {
+    color: #4b5563;
+}
+
+.auth-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.auth-link a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+/* =========================================
+   10. Custom File Upload Button
+========================================= */
+.custom-file-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    background-color: #f9fafb;
+    border: 2px dashed #9ca3af; /* Adds a highly visible dashed outline */
+    border-radius: 8px;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.custom-file-button:hover {
+    background-color: #eff6ff;
+    border-color: #3b82f6; /* Snaps to a bright blue outline on hover */
+    color: #1e3a8a;
+=======
 }

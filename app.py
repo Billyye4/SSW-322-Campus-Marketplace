@@ -136,12 +136,6 @@ def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
     return render_template('product.html', product=product)
 
-@app.route('/buy/<int:product_id>', methods=['POST'])
-def buy_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    flash(f"Success! You just 'purchased' {product.title} for ${product.price:.2f}")
-    return redirect(url_for('marketplace'))
-
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'user_id' not in session:
@@ -187,24 +181,25 @@ def dashboard():
     my_active_listings = Product.query.filter_by(seller=session['username']).all()
     return render_template('dashboard.html', my_listings=my_active_listings, recent_items=recent_items)
 
-# This handles the "Buy Now" button click
+# --- PAYMENT & CHECKOUT ROUTES ---
+
 @app.route('/buy/<int:product_id>', methods=['POST'])
 def buy_product(product_id):
-    # In the future, you could add logic here (like checking if the item is still in stock).
-    # For now, we just instantly redirect the user to the checkout page!
+    if 'user_id' not in session:
+        flash("Please log in to purchase items.")
+        return redirect(url_for('login'))
+        
+    # Instantly redirect the user to the checkout page
     return redirect(url_for('checkout_page', product_id=product_id))
 
-# This actually displays the Checkout HTML page
 @app.route('/checkout/<int:product_id>')
 def checkout_page(product_id):
-    # Find the specific product so we can show its price/title on the checkout screen
-    product = next((p for p in dummy_products if p['id'] == product_id), None)
-    
-    if product:
-        # Assuming you saved the checkout code I gave you earlier as 'checkout.html'
-        return render_template('checkout.html', product=product)
-    
-    return "Product not found", 404
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    # UPGRADED: Find the product in the SQLite Database instead of the old dummy list!
+    product = Product.query.get_or_404(product_id)
+    return render_template('checkout.html', product=product)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-from flask import Flask, render_template, request, redirect, url_for
-=======
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
->>>>>>> 85088ece75e88cdc9c5cc6687e88eb1ead78d8ec
 
 app = Flask(__name__)
 app.secret_key = "super_secret_campus_key"

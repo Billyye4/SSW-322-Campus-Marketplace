@@ -46,6 +46,12 @@ body {
     background-color: #f0fdf4;
 }
 
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 30px; /* Adds a nice space between the Title and the links */
+}
+
 /* Flash Messages */
 .flash-message {
     background-color: #dcfce7;

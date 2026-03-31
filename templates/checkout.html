@@ -6,7 +6,6 @@
     <title>Checkout - Campus Marketplace</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* A few extra styles just for the checkout flow */
         .checkout-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -23,21 +22,33 @@
             cursor: pointer;
             transition: border-color 0.2s;
         }
-        .payment-option:hover {
-            border-color: #3b82f6;
-        }
-        .payment-option input {
-            margin-right: 15px;
-            transform: scale(1.2);
-        }
+        .payment-option:hover { border-color: #3b82f6; }
+        .payment-option input { margin-right: 15px; transform: scale(1.2); }
         .new-card-details {
             background-color: #f9fafb;
             padding: 20px;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
             margin-top: 10px;
-            display: none; /* Hidden by default! */
+            display: none;
         }
+        
+        /* New Styles for the Item Summary */
+        .checkout-item-card {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .checkout-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+        
         @media (max-width: 768px) {
             .checkout-grid { grid-template-columns: 1fr; }
         }
@@ -48,78 +59,94 @@
     <header class="navbar">
         <h1>Campus Marketplace</h1>
         <nav class="nav-links">
-            <a href="/marketplace">Cancel Checkout</a>
+            <a href="/marketplace" style="color: #6b7280;">← Back to Marketplace</a>
         </nav>
     </header>
 
     <main class="container" style="max-width: 900px; margin-top: 40px;">
-        <h2 style="margin-bottom: 5px;">Secure Checkout</h2>
-        <p style="color: #6b7280; margin-bottom: 30px;">Complete your purchase for <strong>{{ product.title }}</strong></p>
+        <h2 style="margin-bottom: 5px;">Secure Checkout 🔒</h2>
+        <p style="color: #6b7280; margin-bottom: 30px;">Review your details and complete your purchase.</p>
 
         <form action="/buy/{{ product.id }}" method="POST">
             <div class="checkout-grid">
                 
-                <div class="info-box">
-                    <h3 style="margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">Order Summary</h3>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                        <span>Item Price</span>
-                        <span>${{ "%.2f"|format(product.price) }}</span>
+                <div>
+                    <div class="info-box" style="margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 20px; color: #374151;">Order Summary</h3>
+                        
+                        <div class="checkout-item-card">
+                            <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" alt="{{ product.title }}" class="checkout-thumbnail">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #111827;">{{ product.title }}</h4>
+                                <p style="margin: 0 0 5px 0; color: #6b7280; font-size: 13px;">Condition: {{ product.condition }}</p>
+                                <p style="margin: 0; font-size: 13px;">
+                                    Seller: <span style="font-weight: bold; color: #2563eb;">{{ product.seller }}</span> 
+                                    <span style="color: #10b981;">(★ 4.9)</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span style="color: #4b5563;">Item Price</span>
+                            <span style="font-weight: 500;">${{ "%.2f"|format(product.price) }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #6b7280;">
+                            <span>Campus Safety Fee</span>
+                            <span>$0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 20px; border-top: 1px dashed #d1d5db; padding-top: 15px; color: #111827;">
+                            <span>Total</span>
+                            <span>${{ "%.2f"|format(product.price) }}</span>
+                        </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #6b7280;">
-                        <span>Campus Fee</span>
-                        <span>$0.00</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-                        <span>Total</span>
-                        <span>${{ "%.2f"|format(product.price) }}</span>
+
+                    <div class="info-box">
+                        <h3 style="margin-bottom: 15px; color: #374151;">Meetup Details 📍</h3>
+                        <p style="color: #6b7280; margin-bottom: 15px; font-size: 14px;">Select a safe, public campus location for the handoff.</p>
+
+                        <select name="meetup_location" id="meetup_location" class="listing-form" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 10px; background-color: #f9fafb;" onchange="toggleCustomLocation()" required>
+                            <option value="" disabled selected>Select a campus location...</option>
+                            <option value="Howe Center (Lobby)">Howe Center (Lobby)</option>
+                            <option value="Samuel C. Williams Library">Samuel C. Williams Library</option>
+                            <option value="Babbio Center">Babbio Center</option>
+                            <option value="UCC (University Center Complex)">UCC (University Center Complex)</option>
+                            <option value="other">Other (Specify below)</option>
+                        </select>
+
+                        <input type="text" name="custom_location" id="custom_location" placeholder="Enter custom meetup spot..." style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; display: none;">
                     </div>
                 </div>
 
-                <div class="info-box" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 15px;">Meetup Details</h3>
-                    <p style="color: #6b7280; margin-bottom: 15px; font-size: 14px;">Where would you like to meet the seller to pick up this item?</p>
-
-                    <select name="meetup_location" id="meetup_location" class="listing-form" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 10px; background-color: #f9fafb;" onchange="toggleCustomLocation()" required>
-                        <option value="" disabled selected>Select a campus location...</option>
-                        <option value="Howe Center (Lobby)">Howe Center (Lobby)</option>
-                        <option value="Samuel C. Williams Library">Samuel C. Williams Library</option>
-                        <option value="Babbio Center">Babbio Center</option>
-                        <option value="UCC (University Center Complex)">UCC (University Center Complex)</option>
-                        <option value="other">Other (Specify below)</option>
-                    </select>
-
-                    <input type="text" name="custom_location" id="custom_location" placeholder="Enter custom meetup spot..." style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; display: none;">
-                </div>
-
-                <div class="info-box">
-                    <h3 style="margin-bottom: 20px;">Payment Method</h3>
+                <div class="info-box" style="height: fit-content;">
+                    <h3 style="margin-bottom: 20px; color: #374151;">Payment Method</h3>
 
                     <label class="payment-option">
                         <input type="radio" name="payment_type" value="existing" checked onclick="toggleCardForm(false)">
-                        💳 Visa ending in 4242
+                        <span style="font-weight: 500;">💳 Visa ending in 4242</span>
                     </label>
 
                     <label class="payment-option">
                         <input type="radio" name="payment_type" value="cash" onclick="toggleCardForm(false)">
-                        💵 Cash on Meetup
+                        <span style="font-weight: 500;">💵 Cash on Meetup</span>
                     </label>
 
                     <label class="payment-option">
                         <input type="radio" name="payment_type" value="new_card" onclick="toggleCardForm(true)">
-                        ➕ Add New Credit/Debit Card
+                        <span style="font-weight: 500;">➕ Add New Card</span>
                     </label>
 
                     <div id="new-card-form" class="new-card-details listing-form">
-                        <input type="text" name="card_name" placeholder="Name on Card" style="margin-bottom: 10px;">
-                        <input type="text" name="card_number" placeholder="Card Number (0000 0000 0000 0000)" style="margin-bottom: 10px;">
-                        <div class="form-row">
-                            <input type="text" name="card_expiry" placeholder="MM/YY">
-                            <input type="text" name="card_cvc" placeholder="CVC">
+                        <p style="font-size: 12px; color: #6b7280; margin-bottom: 10px; text-align: center;">🔒 Payments are securely encrypted.</p>
+                        <input type="text" name="card_name" placeholder="Name on Card" style="margin-bottom: 10px; width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <input type="text" name="card_number" placeholder="Card Number (0000 0000 0000 0000)" style="margin-bottom: 10px; width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" name="card_expiry" placeholder="MM/YY" style="width: 50%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
+                            <input type="text" name="card_cvc" placeholder="CVC" style="width: 50%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px;">
                         </div>
                     </div>
 
-                    <button type="submit" class="buy-button" style="margin-top: 25px;">Confirm Order</button>
+                    <button type="submit" class="buy-button" style="margin-top: 25px; font-size: 16px; padding: 14px;">Confirm Order</button>
+                    <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 15px;">By confirming, you agree to the Campus Safety Guidelines.</p>
                 </div>
             </div>
         </form>

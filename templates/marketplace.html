@@ -37,13 +37,14 @@
             
             <div class="main-marketplace-content">
                 
-                <form action="/" method="GET" class="control-panel">
-                    <div class="search-bar">
-                        <input type="text" name="search" placeholder="🔍 Search listings..." value="{{ request.args.get('search', '') }}">
-                        <button type="submit" style="display: none;">Search</button>
+                <form action="/marketplace" method="GET" class="control-panel">
+                    
+                    <div class="search-bar" style="display: flex; gap: 10px;">
+                        <input type="text" name="search" placeholder="🔍 Search listings..." value="{{ request.args.get('search', '') }}" style="margin-bottom: 0;">
+                        <button type="submit" class="buy-button" style="width: auto; margin-top: 0;">Search</button>
                     </div>
                     
-                    <div class="filters">
+                    <div class="filters" style="margin-top: 20px;">
                         <div class="filter-group">
                             <label>Category</label>
                             <select name="category" onchange="this.form.submit()">

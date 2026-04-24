@@ -47,10 +47,12 @@
 
                 <div class="info-box" style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin: 0; color: #374151;">Revenue Trend</h3>
-                        <button style="background: none; border: 1px solid #e5e7eb; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #4b5563; cursor: pointer; transition: background-color 0.2s;">
-                            Graph Options ▼
-                        </button>
+                        <h3 id="chartTitle" style="margin: 0; color: #374151;">Revenue Trend</h3>
+                        <select id="chartTypeSelector" onchange="renderChart()" style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #4b5563; cursor: pointer; outline: none;">
+                            <option value="line">Trend (Line)</option>
+                            <option value="doughnut">Categories (Doughnut)</option>
+                            <option value="bar">Categories (Bar)</option>
+                        </select>
                     </div>
                     
                     <div class="chart-container" style="height: 250px; width: 100%;">
@@ -179,67 +181,88 @@
             const fileName = e.target.files[0] ? e.target.files[0].name : 'Click to choose an image...';
             document.getElementById('file-name-text').textContent = fileName;
         });
+        
+        // --- Dynamic Chart Logic ---
+        let myChart = null; // Store chart instance globally so we can destroy it
 
-        // Initialize Minimalist Line Chart
-        document.addEventListener("DOMContentLoaded", function() {
+        function renderChart() {
             const ctx = document.getElementById('earningsChart').getContext('2d');
+            const type = document.getElementById('chartTypeSelector').value;
+            const titleElement = document.getElementById('chartTitle');
             
-            const rawLabels = '{{ chart_labels | tojson | safe }}';
-            const rawData = '{{ chart_data | tojson | safe }}';
-            
-            const labels = JSON.parse(rawLabels);
-            const data = JSON.parse(rawData);
+            // Get data sets from Flask
+            const timeLabels = JSON.parse('{{ time_labels | tojson | safe }}');
+            const timeData = JSON.parse('{{ time_data | tojson | safe }}');
+            const catLabels = JSON.parse('{{ cat_labels | tojson | safe }}');
+            const catData = JSON.parse('{{ cat_data | tojson | safe }}');
 
-            new Chart(ctx, {
-                type: 'line', 
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Sales ($)',
-                        data: data,
-                        borderColor: '#2563eb', // Clean blue line
-                        backgroundColor: 'rgba(37, 99, 235, 0.08)', // Faint blue fill underneath
-                        borderWidth: 2,
-                        pointBackgroundColor: '#ffffff', // White dots with blue border
-                        pointBorderColor: '#2563eb',
-                        pointRadius: 4,
-                        fill: true, // Fills area under the line
-                        tension: 0.4 // Makes the line smooth/curved instead of sharp angles
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }, // Hidden for minimalism
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ' $' + context.raw;
-                                }
-                            }
-                        }
+            // Destroy existing chart if it exists
+            if (myChart != null) {
+                myChart.destroy();
+            }
+
+            let config = {};
+
+            if (type === 'line') {
+                titleElement.innerText = "Revenue Trend";
+                config = {
+                    type: 'line', 
+                    data: {
+                        labels: timeLabels,
+                        datasets: [{
+                            label: 'Sales ($)',
+                            data: timeData,
+                            borderColor: '#2563eb', 
+                            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#2563eb',
+                            pointRadius: 4,
+                            fill: true, tension: 0.4 
+                        }]
                     },
-                    scales: {
-                        x: {
-                            grid: { display: false } // Removes vertical grid lines
-                        },
-                        y: {
-                            beginAtZero: true,
-                            border: { display: false }, // Hides the main y-axis line
-                            grid: { 
-                                color: '#f3f4f6' // Very faint horizontal lines
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value;
-                                }
-                            }
-                        }
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, border: { display: false } } }
                     }
-                }
-            });
-        });
+                };
+            } else if (type === 'doughnut') {
+                titleElement.innerText = "Revenue by Category";
+                config = {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels,
+                        datasets: [{
+                            data: catData,
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
+                            borderWidth: 2, borderColor: '#ffffff'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                };
+            } else if (type === 'bar') {
+                titleElement.innerText = "Revenue by Category";
+                config = {
+                    type: 'bar',
+                    data: {
+                        labels: catLabels,
+                        datasets: [{
+                            label: 'Revenue ($)',
+                            data: catData,
+                            backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                };
+            }
+
+            myChart = new Chart(ctx, config);
+        }
+
+        // Render the default chart on page load
+        document.addEventListener("DOMContentLoaded", renderChart);
     </script>
 </body>
 </html>

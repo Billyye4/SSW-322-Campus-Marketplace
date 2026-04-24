@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Campus Marketplace</title>
+    <title>{{ user.username }}'s Profile - Campus Marketplace</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -13,54 +13,135 @@
         <nav class="nav-links">
             <a href="/marketplace">Marketplace</a>
             <a href="/dashboard">My Listings</a>
-            <a href="/profile" class="active">Profile</a>
+            <a href="/profile" {% if session.get('username') == user.username %}class="active"{% endif %}>Profile</a>
             <a href="/logout">Logout</a> 
         </nav>
     </header>
 
     <main class="container">
-        <h2 style="margin-bottom: 20px;">My Profile</h2>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash-message" style="margin-bottom: 20px;">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <h2 style="margin-bottom: 20px;">
+            {% if session.get('username') == user.username %}
+                Account & Storefront
+            {% else %}
+                {{ user.username }}'s Public Storefront
+            {% endif %}
+        </h2>
 
         <div class="dashboard-layout">
             
             <section class="my-listings-column">
-                <h3 style="margin-bottom: 15px; color: #374151;">My Purchase History</h3>
                 
-                {% if purchases|length == 0 %}
-                    <p style="color: #6b7280; padding: 20px; background-color: #ffffff; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;">You haven't bought anything yet. Check out the marketplace!</p>
-                {% else %}
-                    <div class="product-grid">
-                        {% for item in purchases %}
-                            <article class="product-card">
-                                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="product-image">
-                                <div class="product-info">
-                                    <h3 class="product-title">{{ item.title }}</h3>
-                                    <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
-                                    <p style="font-size: 12px; color: #4b5563; margin-top: 10px;">
-                                        Bought from: <strong>{{ item.seller }}</strong>
-                                    </p>
-                                </div>
-                            </article>
-                        {% endfor %}
+                <div class="info-box" style="margin-bottom: 30px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+                        <h3 style="color: #0f172a; margin: 0;">🏪 Active Listings</h3>
+                        {% if session.get('username') == user.username %}
+                            <a href="/dashboard" class="add-link" style="font-weight: bold; font-size: 13px;">Manage Listings →</a>
+                        {% endif %}
                     </div>
+                    
+                    {% if active_listings|length == 0 %}
+                        <p style="color: #64748b; font-size: 14px; text-align: center; padding: 20px 0;">No active listings right now.</p>
+                    {% else %}
+                        <div class="product-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            {% for item in active_listings %}
+                                <a href="/product/{{ item.id }}" style="text-decoration: none; color: inherit;">
+                                    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; display: flex; gap: 15px; align-items: center; transition: box-shadow 0.2s;">
+                                        <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" style="width: 60px; height: 60px; object-fit: contain; background: #f1f5f9; border-radius: 4px;">
+                                        <div>
+                                            <h4 style="font-size: 14px; color: #1e293b; margin-bottom: 2px;">{{ item.title }}</h4>
+                                            <p style="font-size: 15px; font-weight: bold; color: #2563eb;">${{ "%.2f"|format(item.price) }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if session.get('username') == user.username %}
+                    <h3 style="margin-bottom: 15px; color: #374151;">My Purchase History</h3>
+                    {% if purchases|length == 0 %}
+                        <p style="color: #6b7280; padding: 20px; background-color: #ffffff; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;">You haven't bought anything yet.</p>
+                    {% else %}
+                        <div class="product-grid">
+                            {% for item in purchases %}
+                                <article class="product-card" style="background-color: #f9fafb; border: 1px solid #e5e7eb;">
+                                    <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="product-image">
+                                    <div class="product-info">
+                                        <h3 class="product-title" style="color: #4b5563;">{{ item.title }}</h3>
+                                        <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
+                                        <p style="font-size: 12px; color: #10b981; font-weight: bold; margin-top: 5px;">✓ Bought from {{ item.seller }}</p>
+                                        <p style="font-size: 11px; color: #9ca3af; margin-top: 2px;">Date: {{ item.date_added }}</p>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 {% endif %}
             </section>
 
             <aside class="recent-sidebar">
-                <div class="info-box profile-sidebar-header">
-                    <div class="avatar-circle">
-                        👤
-                    </div>
+                <div class="info-box profile-sidebar-header" style="margin-bottom: 20px;">
+                    <div class="avatar-circle">👤</div>
                     <h3 style="margin-bottom: 5px; color: #111827;">{{ user.username }}</h3>
-                    <p style="color: #6b7280; font-size: 14px;">Verified Student</p>
+                    <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Verified Student</p>
                     
+                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg style="width: 20px; height: 20px;" fill="#f59e0b" viewBox="0 0 24 24">
+                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
+                        </svg>
+                        <span style="font-weight: bold; font-size: 18px; color: #92400e;">{{ "%.1f"|format(avg_rating) }}</span>
+                        <span style="color: #b45309; font-size: 14px;">({{ reviews|length }} reviews)</span>
+                    </div>
+
                     <div class="profile-stats">
-                        <p><strong>Account ID:</strong> #{{ user.id }}</p>
-                        <p><strong>Total Purchases:</strong> {{ purchases|length }}</p>
+                        <p><strong>Items Sold:</strong> {{ sold_listings|length }}</p>
+                        <p><strong>Active Listings:</strong> {{ active_listings|length }}</p>
                     </div>
                 </div>
-            </aside>
 
+                {% if session.get('username') != user.username %}
+                    <h3 style="margin-bottom: 15px; color: #374151; font-size: 16px;">Leave a Review</h3>
+                    <form action="/user/{{ user.username }}" method="POST" class="listing-form" style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 25px;">
+                        <select name="rating" required style="margin-bottom: 10px;">
+                            <option value="" disabled selected>Select a Rating...</option>
+                            <option value="5">⭐⭐⭐⭐⭐ (5/5 - Excellent)</option>
+                            <option value="4">⭐⭐⭐⭐ (4/5 - Good)</option>
+                            <option value="3">⭐⭐⭐ (3/5 - Average)</option>
+                            <option value="2">⭐⭐ (2/5 - Poor)</option>
+                            <option value="1">⭐ (1/5 - Terrible)</option>
+                        </select>
+                        <textarea name="comment" rows="2" placeholder="Write your experience..." required style="margin-bottom: 10px;"></textarea>
+                        <button type="submit" class="buy-button" style="padding: 10px; font-size: 14px;">Submit Review</button>
+                    </form>
+                {% endif %}
+
+                <h3 style="margin-bottom: 15px; color: #374151; font-size: 16px;">Recent Reviews</h3>
+                <div class="sidebar-feed">
+                    {% if reviews|length == 0 %}
+                        <p style="color: #64748b; font-size: 13px;">No reviews yet.</p>
+                    {% else %}
+                        {% for review in reviews %}
+                            <div style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                    <strong style="color: #111827; font-size: 14px;">{{ review.reviewer_username }}</strong>
+                                    <span style="color: #f59e0b; font-size: 12px;">{{ "★" * review.rating }}{{ "☆" * (5 - review.rating) }}</span>
+                                </div>
+                                <p style="color: #4b5563; font-size: 13px; margin-bottom: 5px;">{{ review.comment }}</p>
+                                <p style="color: #9ca3af; font-size: 11px;">{{ review.date_added }}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </aside>
         </div>
     </main>
 

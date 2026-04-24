@@ -45,12 +45,45 @@
                 <div class="info-box seller-box">
                     <span class="box-label" style="margin-bottom: 0;">Seller</span>
                     <span class="rating-display">
+                        <a href="/user/{{ product.seller }}" style="color: #2563eb; font-weight: bold; text-decoration: none; margin-right: 10px;">@{{ product.seller }}</a>
                         <svg style="width: 18px; height: 18px;" fill="#f59e0b" viewBox="0 0 24 24">
                             <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
                         </svg>
-                        <strong>{{ product.seller_rating }}/5</strong> ({{ product.reviews }} Reviews)
+                        <strong>{{ product.seller_rating }}/5</strong>
                     </span>
                 </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 class="box-label" style="font-size: 12px;">Recent Seller Reviews</h3>
+                    {% if reviews|length == 0 %}
+                        <p style="font-size: 13px; color: #6b7280; font-style: italic;">No reviews yet.</p>
+                    {% else %}
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            {% for review in reviews %}
+                                <div style="background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <strong style="font-size: 13px; color: #111827;">{{ review.reviewer_username }}</strong>
+                                        <span style="color: #f59e0b; font-size: 12px;">{{ "★" * review.rating }}{{ "☆" * (5 - review.rating) }}</span>
+                                    </div>
+                                    <p style="font-size: 13px; color: #4b5563; margin: 0;">"{{ review.comment }}"</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <a href="/user/{{ product.seller }}" style="display: block; margin-top: 10px; font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 500;">View all reviews →</a>
+                    {% endif %}
+                </div>
+
+                {% if session.get('username') == product.seller %}
+                    <button class="buy-button" style="background-color: #9ca3af; cursor: not-allowed;" disabled>This is your listing</button>
+                {% else %}
+                    <a href="/checkout/{{ product.id }}" class="buy-button" style="display: inline-block; text-align: center; text-decoration: none;">Buy Now</a>
+                {% endif %}
+
+                {% if session.get('username') == product.seller %}
+                    <button class="buy-button" style="background-color: #9ca3af; cursor: not-allowed;" disabled>This is your listing</button>
+                {% else %}
+                    <a href="/checkout/{{ product.id }}" class="buy-button">Buy Now</a>
+                {% endif %}
 
                <a href="/checkout/{{ product.id }}" class="buy-button" style="display: inline-block; text-align: center; text-decoration: none;">Buy Now</a>
             </div>

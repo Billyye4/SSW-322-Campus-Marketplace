@@ -8,7 +8,7 @@ from datetime import date
 app = Flask(__name__)
 app.secret_key = "super_secret_campus_key" 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace_v3.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace_v4.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- NEW: Image Upload Configuration ---
@@ -38,6 +38,14 @@ class Product(db.Model):
     is_sold = db.Column(db.Boolean, default=False)
     buyer_username = db.Column(db.String(50), nullable=True)
 
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    seller_username = db.Column(db.String(50), nullable=False)
+    reviewer_username = db.Column(db.String(50), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    date_added = db.Column(db.String(20), nullable=False)
+
 # Initialize the database and ensure the upload folder exists
 with app.app_context():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -63,7 +71,24 @@ with app.app_context():
         db.session.bulk_save_objects(dummy_data)
         db.session.commit()
 
+        # ... (Right below db.session.bulk_save_objects(dummy_data)) ...
+        dummy_reviews = [
+            Review(seller_username="PowerSeller", reviewer_username="StudentA", rating=5, comment="Item was exactly as described. Quick meetup at the library!", date_added="2026-03-15"),
+            Review(seller_username="PowerSeller", reviewer_username="StudentC", rating=4, comment="Great price, but was 5 minutes late to the meetup.", date_added="2026-03-22")
+        ]
+        db.session.bulk_save_objects(dummy_reviews)
+        db.session.commit()
 
+
+@app.before_request
+def clear_ghost_sessions():
+    """Runs before every single page load to ensure the logged-in user actually exists in the DB."""
+    if 'user_id' in session:
+        # Check if the ID in the cookie matches a real user in the database
+        user = User.query.get(session['user_id'])
+        if not user:
+            # If the database was wiped, destroy the old cookie!
+            session.clear()
 
 # --- AUTHENTICATION ROUTES ---
 @app.route('/', methods=['GET', 'POST'])
@@ -151,10 +176,15 @@ def marketplace():
 def product_detail(product_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
+        
     product = Product.query.get_or_404(product_id)
-    return render_template('product.html', product=product)
+    
+    # --- NEW: Fetch the 3 most recent reviews for the seller ---
+    seller_reviews = Review.query.filter_by(seller_username=product.seller).order_by(Review.date_added.desc()).limit(3).all()
+    
+    return render_template('product.html', product=product, reviews=seller_reviews)
 
-# --- NEW: UPDATED DASHBOARD ROUTE ---
+# --- UPDATED DASHBOARD ROUTE ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'user_id' not in session:
@@ -178,7 +208,7 @@ def dashboard():
         new_listing = Product(
             title=title,
             seller=session['username'],
-            seller_rating=5.0,
+            seller_rating=5.0, # Default new seller rating
             reviews=0,
             description=description,
             price=float(price),
@@ -199,24 +229,89 @@ def dashboard():
     my_sold_listings = Product.query.filter_by(seller=session['username'], is_sold=True).all()
     total_earnings = sum(item.price for item in my_sold_listings)
 
-    # --- CALCULATE CHART DATA (Revenue Over Time) ---
-    # Sort sold items by date so the graph flows left to right
+    # 1. Calculate Data for Line Graph (Time Trend)
     sorted_sales = sorted(my_sold_listings, key=lambda x: x.date_added)
-    
     revenue_by_date = {}
     for item in sorted_sales:
-        if item.date_added in revenue_by_date:
-            revenue_by_date[item.date_added] += item.price
+        revenue_by_date[item.date_added] = revenue_by_date.get(item.date_added, 0) + item.price
+
+    # 2. Calculate Data for Category Graphs (Doughnut/Bar)
+    category_revenue = {"Books": 0, "Electronics": 0, "Music": 0}
+    for item in my_sold_listings:
+        if item.category in category_revenue:
+            category_revenue[item.category] += item.price
         else:
-            revenue_by_date[item.date_added] = item.price
+            category_revenue[item.category] = item.price
 
     return render_template('dashboard.html', 
                            my_listings=my_active_listings, 
                            my_sold_listings=my_sold_listings,
                            total_earnings=total_earnings,
                            recent_items=recent_items,
-                           chart_labels=list(revenue_by_date.keys()),
-                           chart_data=list(revenue_by_date.values()))
+                           time_labels=list(revenue_by_date.keys()),
+                           time_data=list(revenue_by_date.values()),
+                           cat_labels=list(category_revenue.keys()),
+                           cat_data=list(category_revenue.values()))
+
+# --- UNIFIED PROFILE & STOREFRONT ROUTES ---
+@app.route('/profile')
+def profile():
+    # If the user clicks "Profile" in the navbar, redirect them to their own public URL
+    if 'user_id' not in session:
+        flash("Please log in to view your profile.")
+        return redirect(url_for('login'))
+    return redirect(url_for('public_profile', username=session['username']))
+
+@app.route('/user/<username>', methods=['GET', 'POST'])
+def public_profile(username):
+    # Fetch the target user (either yourself or the seller you clicked on)
+    target_user = User.query.filter_by(username=username).first_or_404()
+    
+    # Handle new review submissions (Only for public viewing)
+    if request.method == 'POST':
+        if 'user_id' not in session:
+            flash("You must be logged in to leave a review.")
+            return redirect(url_for('login'))
+            
+        if session.get('username') == target_user.username:
+            flash("You cannot review yourself!")
+            return redirect(url_for('public_profile', username=username))
+            
+        rating = int(request.form.get('rating'))
+        comment = request.form.get('comment')
+        
+        new_review = Review(
+            seller_username=target_user.username,
+            reviewer_username=session['username'],
+            rating=rating,
+            comment=comment,
+            date_added=date.today().strftime("%Y-%m-%d")
+        )
+        db.session.add(new_review)
+        db.session.commit()
+        flash("Review submitted successfully!")
+        return redirect(url_for('public_profile', username=username))
+
+    # Fetch data for the page
+    active_listings = Product.query.filter_by(seller=username, is_sold=False).order_by(Product.date_added.desc()).all()
+    sold_listings = Product.query.filter_by(seller=username, is_sold=True).all()
+    reviews = Review.query.filter_by(seller_username=username).order_by(Review.date_added.desc()).all()
+    
+    # Private data: Only fetch purchase history if viewing your OWN profile
+    purchases = []
+    if session.get('username') == target_user.username:
+        purchases = Product.query.filter_by(buyer_username=target_user.username).order_by(Product.date_added.desc()).all()
+    
+    # Calculate dynamic average rating
+    avg_rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 5.0
+    
+    return render_template('profile.html', 
+                           user=target_user, 
+                           active_listings=active_listings,
+                           sold_listings=sold_listings,
+                           purchases=purchases,
+                           reviews=reviews, 
+                           avg_rating=avg_rating)
 
 # --- PAYMENT & CHECKOUT ROUTES ---
 @app.route('/buy/<int:product_id>', methods=['POST'])
@@ -253,28 +348,14 @@ def checkout_page(product_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
         
-    # UPGRADED: Find the product in the SQLite Database instead of the old dummy list!
     product = Product.query.get_or_404(product_id)
+    
+    # --- NEW: Prevent buying your own item ---
+    if product.seller == session.get('username'):
+        flash("You cannot buy your own item!")
+        return redirect(url_for('product_detail', product_id=product.id))
+        
     return render_template('checkout.html', product=product)
-
-@app.route('/profile')
-def profile():
-    if 'user_id' not in session:
-        flash("Please log in to view your profile.")
-        return redirect(url_for('login'))
-
-    user = User.query.get(session['user_id'])
-    
-    # --- NEW: Catch "ghost" sessions from old databases ---
-    if not user:
-        session.clear()
-        flash("Session expired or invalid. Please log in again.")
-        return redirect(url_for('login'))
-    
-    # Fetch all items where this user is the buyer
-    my_purchases = Product.query.filter_by(buyer_username=user.username).order_by(Product.date_added.desc()).all()
-
-    return render_template('profile.html', user=user, purchases=my_purchases)
 
 if __name__ == '__main__':
     app.run(debug=True)

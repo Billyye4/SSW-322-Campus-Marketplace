@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Campus Marketplace</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="navbar">
+        <h1>Campus Marketplace</h1>
+        <nav class="nav-links">
+            <a href="/marketplace">Marketplace</a>
+            <a href="/dashboard">My Listings</a>
+            <a href="/profile" class="active">Profile</a>
+            <a href="/logout">Logout</a> 
+        </nav>
+    </header>
+
+    <main class="container">
+        <h2 style="margin-bottom: 20px;">My Profile</h2>
+
+        <div class="dashboard-layout">
+            
+            <section class="my-listings-column">
+                <h3 style="margin-bottom: 15px; color: #374151;">My Purchase History</h3>
+                
+                {% if purchases|length == 0 %}
+                    <p style="color: #6b7280; padding: 20px; background-color: #ffffff; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb;">You haven't bought anything yet. Check out the marketplace!</p>
+                {% else %}
+                    <div class="product-grid">
+                        {% for item in purchases %}
+                            <article class="product-card">
+                                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="product-image">
+                                <div class="product-info">
+                                    <h3 class="product-title">{{ item.title }}</h3>
+                                    <p class="product-price">${{ "%.2f"|format(item.price) }}</p>
+                                    <p style="font-size: 12px; color: #4b5563; margin-top: 10px;">
+                                        Bought from: <strong>{{ item.seller }}</strong>
+                                    </p>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+
+            <aside class="recent-sidebar">
+                <div class="info-box profile-sidebar-header">
+                    <div class="avatar-circle">
+                        👤
+                    </div>
+                    <h3 style="margin-bottom: 5px; color: #111827;">{{ user.username }}</h3>
+                    <p style="color: #6b7280; font-size: 14px;">Verified Student</p>
+                    
+                    <div class="profile-stats">
+                        <p><strong>Account ID:</strong> #{{ user.id }}</p>
+                        <p><strong>Total Purchases:</strong> {{ purchases|length }}</p>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+</body>
+</html>

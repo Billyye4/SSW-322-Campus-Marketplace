@@ -8,7 +8,7 @@ from datetime import date
 app = Flask(__name__)
 app.secret_key = "super_secret_campus_key" 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace_v3.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- NEW: Image Upload Configuration ---
@@ -32,21 +32,38 @@ class Product(db.Model):
     condition = db.Column(db.String(50), nullable=False)
     category = db.Column(db.String(50), nullable=False)
     date_added = db.Column(db.String(20), nullable=False)
-    # NEW: Store the name of the image file
     image_filename = db.Column(db.String(255), nullable=True, default='default.png')
+    
+    # --- NEW COLUMNS FOR EARNINGS & PROFILES ---
+    is_sold = db.Column(db.Boolean, default=False)
+    buyer_username = db.Column(db.String(50), nullable=True)
 
 # Initialize the database and ensure the upload folder exists
 with app.app_context():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     db.create_all()
-    if not Product.query.first():
-        starter_items = [
-            Product(title="Funkadelic Maggot Brain Vinyl", seller="VinylCollector99", seller_rating=4.9, reviews=12, description="Classic funk rock album. Sleeve is in near-mint condition.", price=25.00, condition="Used - Good", category="Music", date_added="2026-03-10", image_filename="default.png"),
-            Product(title="Corsair 32GB DDR5 RAM", seller="HardwareSteve", seller_rating=5.0, reviews=54, description="Upgraded my rig recently, these work perfectly. Great for a new build.", price=80.00, condition="Like New", category="Electronics", date_added="2026-03-12", image_filename="default.png"),
-            Product(title="Python Toolchains & Refactoring", seller="GradStudentBob", seller_rating=3.8, reviews=4, description="Lightly used textbook. No highlighting on the pages.", price=45.00, condition="Used - Fair", category="Books", date_added="2026-03-14", image_filename="default.png")
+    
+    # Create dummy PowerSeller if it doesn't exist
+    if not User.query.filter_by(username="PowerSeller").first():
+        hashed_pw = generate_password_hash("password123") # Password is password123
+        power_user = User(username="PowerSeller", password_hash=hashed_pw)
+        db.session.add(power_user)
+        db.session.commit() # Commit user first to get an ID just in case
+        
+        # Add a bunch of sold dummy data for the chart
+        dummy_data = [
+            Product(title="Funkadelic Maggot Brain Vinyl", seller="PowerSeller", description="Classic funk rock album.", price=25.00, condition="Used - Good", category="Music", date_added="2026-01-10", image_filename="vinyl.png", is_sold=True, buyer_username="StudentA"),
+            Product(title="Beats Studio Pro", seller="PowerSeller", description="Noise cancelling headphones.", price=150.00, condition="Like New", category="Music", date_added="2026-02-15", image_filename="default.png", is_sold=True, buyer_username="StudentB"),
+            Product(title="Corsair 32GB DDR5 RAM", seller="PowerSeller", description="Upgraded my rig.", price=80.00, condition="Like New", category="Electronics", date_added="2026-03-12", image_filename="ram.jpg", is_sold=True, buyer_username="StudentC"),
+            Product(title="Calculus Early Transcendentals", seller="PowerSeller", description="Math book.", price=45.00, condition="Used - Fair", category="Books", date_added="2026-03-20", image_filename="default.png", is_sold=True, buyer_username="StudentD"),
+            Product(title="Python Crash Course", seller="PowerSeller", description="Programming book.", price=30.00, condition="Used - Good", category="Books", date_added="2026-04-01", image_filename="default.png", is_sold=True, buyer_username="StudentE"),
+            # Add one unsold item just to have it
+            Product(title="Nintendo Switch OLED", seller="PowerSeller", description="Comes with dock.", price=220.00, condition="Like New", category="Electronics", date_added="2026-04-20", image_filename="switch.jpg", is_sold=False)
         ]
-        db.session.bulk_save_objects(starter_items)
+        db.session.bulk_save_objects(dummy_data)
         db.session.commit()
+
+
 
 # --- AUTHENTICATION ROUTES ---
 @app.route('/', methods=['GET', 'POST'])
@@ -107,7 +124,8 @@ def marketplace():
     category_query = request.args.get('category', 'All Categories')
     sort_query = request.args.get('sort', 'Newest First')
     
-    products = Product.query.all()
+    # Only show items that haven't been sold yet
+    products = Product.query.filter_by(is_sold=False).all()
     filtered_products = []
     
     for product in products:
@@ -136,6 +154,7 @@ def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
     return render_template('product.html', product=product)
 
+# --- NEW: UPDATED DASHBOARD ROUTE ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'user_id' not in session:
@@ -149,14 +168,11 @@ def dashboard():
         condition = request.form.get('condition')
         description = request.form.get('description')
         
-        # --- NEW: Process the uploaded image ---
         file = request.files.get('image_file')
-        filename = 'default.png' # Fallback if no image is uploaded
+        filename = 'default.png' 
         
         if file and file.filename != '':
-            # Secure the filename to prevent hackers from uploading malicious scripts
             filename = secure_filename(file.filename)
-            # Save the physical file to the static/uploads folder
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         
         new_listing = Product(
@@ -169,7 +185,8 @@ def dashboard():
             condition=condition,
             category=category,
             date_added=date.today().strftime("%Y-%m-%d"),
-            image_filename=filename # Save the name of the file to the database
+            image_filename=filename,
+            is_sold=False 
         )
         
         db.session.add(new_listing)
@@ -177,12 +194,31 @@ def dashboard():
         flash(f"Successfully listed: {title}!")
         return redirect(url_for('dashboard'))
 
-    recent_items = Product.query.order_by(Product.date_added.desc()).limit(3).all()
-    my_active_listings = Product.query.filter_by(seller=session['username']).all()
-    return render_template('dashboard.html', my_listings=my_active_listings, recent_items=recent_items)
+    recent_items = Product.query.filter_by(is_sold=False).order_by(Product.date_added.desc()).limit(3).all()
+    my_active_listings = Product.query.filter_by(seller=session['username'], is_sold=False).all()
+    my_sold_listings = Product.query.filter_by(seller=session['username'], is_sold=True).all()
+    total_earnings = sum(item.price for item in my_sold_listings)
+
+    # --- CALCULATE CHART DATA (Revenue Over Time) ---
+    # Sort sold items by date so the graph flows left to right
+    sorted_sales = sorted(my_sold_listings, key=lambda x: x.date_added)
+    
+    revenue_by_date = {}
+    for item in sorted_sales:
+        if item.date_added in revenue_by_date:
+            revenue_by_date[item.date_added] += item.price
+        else:
+            revenue_by_date[item.date_added] = item.price
+
+    return render_template('dashboard.html', 
+                           my_listings=my_active_listings, 
+                           my_sold_listings=my_sold_listings,
+                           total_earnings=total_earnings,
+                           recent_items=recent_items,
+                           chart_labels=list(revenue_by_date.keys()),
+                           chart_data=list(revenue_by_date.values()))
 
 # --- PAYMENT & CHECKOUT ROUTES ---
-
 @app.route('/buy/<int:product_id>', methods=['POST'])
 def buy_product(product_id):
     if 'user_id' not in session:
@@ -191,26 +227,23 @@ def buy_product(product_id):
         
     product = Product.query.get_or_404(product_id)
     payment_type = request.form.get('payment_type')
-    
-    # --- NEW: Capture the Meetup Location ---
     location = request.form.get('meetup_location')
+    
     if location == 'other':
         location = request.form.get('custom_location')
 
-    # Update the flash messages to include the location!
     if payment_type == 'cash':
         flash(f"Order confirmed! Please meet {product.seller} at the {location} for a cash exchange for '{product.title}'.")
-        
     elif payment_type == 'new_card':
-        card_name = request.form.get('card_name')
         card_number = request.form.get('card_number')
         last_four = card_number[-4:] if card_number else "XXXX"
         flash(f"Success! Charged ${product.price:.2f} to the card ending in {last_four}. Pick up your item from {product.seller} at the {location}.")
-        
     else:
         flash(f"Success! Charged ${product.price:.2f} to your saved Visa. Pick up your item from {product.seller} at the {location}.")
 
-    db.session.delete(product)
+    # --- NEW: Mark as sold instead of deleting ---
+    product.is_sold = True
+    product.buyer_username = session['username']
     db.session.commit()
 
     return redirect(url_for('marketplace'))
@@ -223,6 +256,25 @@ def checkout_page(product_id):
     # UPGRADED: Find the product in the SQLite Database instead of the old dummy list!
     product = Product.query.get_or_404(product_id)
     return render_template('checkout.html', product=product)
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        flash("Please log in to view your profile.")
+        return redirect(url_for('login'))
+
+    user = User.query.get(session['user_id'])
+    
+    # --- NEW: Catch "ghost" sessions from old databases ---
+    if not user:
+        session.clear()
+        flash("Session expired or invalid. Please log in again.")
+        return redirect(url_for('login'))
+    
+    # Fetch all items where this user is the buyer
+    my_purchases = Product.query.filter_by(buyer_username=user.username).order_by(Product.date_added.desc()).all()
+
+    return render_template('profile.html', user=user, purchases=my_purchases)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -11,6 +11,7 @@
 body {
     background-color: #f0f2f5;
     color: #333;
+    line-height: 1.5;
 }
 
 .container {
@@ -46,7 +47,6 @@ body {
     background-color: #f0fdf4;
 }
 
-/* Flash Messages */
 .flash-message {
     background-color: #dcfce7;
     color: #166534;
@@ -112,7 +112,7 @@ body {
 }
 
 /* =========================================
-   4. Product Grid & Cards
+   4. Product List View (1-Column Layout)
 ========================================= */
 .results-text {
     font-size: 18px;
@@ -120,50 +120,56 @@ body {
     color: #111827;
 }
 
+/* Forced single column layout */
 .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 20px;
 }
 
 .product-card {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
     background-color: #ffffff;
     border-radius: 12px;
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     transition: transform 0.2s, box-shadow 0.2s;
     border: 1px solid transparent;
+    gap: 20px;
+    overflow: hidden;
 }
 
 .product-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     border-color: #e5e7eb;
 }
 
-.product-image-placeholder {
-    background-color: #f3f4f6;
-    height: 150px;
+/* Fixed image dimensions to stop stretching */
+.product-image {
+    width: 220px;
+    min-width: 220px;
+    height: 160px;
+    object-fit: contain; /* Shrinks the whole image to fit */
+    object-position: center;
     border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 30px;
-    margin-bottom: 15px;
+    background-color: #e5e7eb; /* Adds a nice frame for non-square images */
+    margin-bottom: 0; 
 }
 
-.product-image {
-    width: 100%;
-    height: 150px;
-    object-fit: cover; /* This makes sure the image crops nicely instead of squishing */
-    border-radius: 8px;
-    margin-bottom: 15px;
-    background-color: #f3f4f6; /* Acts as a fallback color while loading */
+.product-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0; /* Prevents long text from pushing the flex container out */
+    justify-content: center;
 }
 
 .product-title {
-    font-size: 16px;
-    margin-bottom: 4px;
+    font-size: 18px;
+    margin-bottom: 6px;
     color: #111827;
 }
 
@@ -171,22 +177,27 @@ body {
     font-size: 13px;
     color: #6b7280;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .product-desc {
     font-size: 14px;
-    margin-bottom: 15px;
+    margin-bottom: auto; /* Pushes price to the bottom */
     color: #4b5563;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    padding-bottom: 10px;
 }
 
 .product-price {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     color: #2563eb;
+    margin-top: 5px;
 }
 
 /* =========================================
@@ -196,9 +207,9 @@ body {
     display: grid;
     grid-template-columns: 2.5fr 1fr; 
     gap: 30px;
+    align-items: start;
 }
 
-/* THIS WAS MISSING: Fixes the grid blowout on both main marketplace and dashboard */
 .main-marketplace-content, .my-listings-column {
     min-width: 0; 
 }
@@ -208,7 +219,6 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    align-self: start; 
     position: sticky;
     top: 20px;
 }
@@ -216,7 +226,7 @@ body {
 .sidebar-feed {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
 }
 
 .sidebar-card-link {
@@ -232,6 +242,7 @@ body {
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     transition: background-color 0.2s;
+    align-items: center;
 }
 
 .sidebar-card:hover {
@@ -239,14 +250,13 @@ body {
 }
 
 .sidebar-img {
-    background-color: #e5e7eb;
+    width: 60px;
     min-width: 60px;
     height: 60px;
+    object-fit: contain; /* Forces the whole image to fit */
     border-radius: 6px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
+    background-color: #e5e7eb;
+    padding: 4px; /* Gives the tiny image a nice little border */
 }
 
 .sidebar-info {
@@ -263,6 +273,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     color: #111827;
+    font-weight: 600;
 }
 
 .sidebar-price {
@@ -304,10 +315,10 @@ body {
     background-color: #e5e7eb;
     border-radius: 12px;
     aspect-ratio: 1; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 80px;
+    object-fit: contain; /* Shrinks the whole image to fit */
+    width: 100%; 
+    height: 100%;
+    padding: 20px; /* Gives the image some breathing room inside the box */
 }
 
 .detail-title {
@@ -367,6 +378,9 @@ body {
     width: 100%;
     margin-top: 10px;
     transition: background-color 0.2s;
+    text-align: center;
+    text-decoration: none;
+    display: block;
 }
 
 .buy-button:hover {
@@ -374,253 +388,7 @@ body {
 }
 
 /* =========================================
-   7. Checkout Page Layout
-========================================= */
-.checkout-container {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 30px;
-    max-width: 1100px;
-    margin: 40px auto;
-    padding: 0 20px;
-}
-
-/* Base Card Style for Checkout */
-.card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #f3f4f6;
-}
-
-/* Product Details Layout */
-.product-card {
-    display: flex;
-    gap: 24px;
-}
-
-.checkout-container .product-image-placeholder {
-    width: 150px;
-    height: 150px;
-    margin-bottom: 0; /* Overrides the grid image margin */
-}
-
-.product-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.product-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-}
-
-.product-header h3 {
-    font-size: 18px;
-    color: #111827;
-}
-
-.product-header .price {
-    font-size: 18px;
-    font-weight: bold;
-    color: #2563eb;
-}
-
-.product-info .description {
-    color: #6b7280;
-    font-size: 14px;
-    flex-grow: 1;
-}
-
-.product-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.product-actions .links a {
-    color: #4b5563;
-    text-decoration: none;
-    font-size: 13px;
-    margin-right: 10px;
-}
-
-.product-actions .links a:hover {
-    color: #dc2626; /* Red for delete hover */
-}
-
-.quantity-selector {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #4b5563;
-}
-
-.quantity-selector button {
-    width: 28px;
-    height: 28px;
-    border: 1px solid #d1d5db;
-    background: #f9fafb;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.quantity-selector input {
-    width: 40px;
-    text-align: center;
-    border: 1px solid #d1d5db;
-    height: 28px;
-    border-radius: 4px;
-}
-
-/* Payment & Address Sections */
-.section-card h4 {
-    margin-bottom: 16px;
-    font-size: 16px;
-    color: #111827;
-}
-
-.radio-option {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #f9fafb;
-    padding: 16px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    margin-bottom: 12px;
-    cursor: pointer;
-}
-
-.add-link {
-    color: #2563eb;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.address-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.address-box {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 30px 15px;
-    text-align: center;
-    cursor: pointer;
-    background: #f9fafb;
-    color: #4b5563;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.address-box.selected {
-    border-color: #111827;
-    background: #ffffff;
-    color: #111827;
-    box-shadow: 0 0 0 1px #111827; /* Thicker border look */
-}
-
-/* Order Summary (Right Column) */
-.order-summary {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #f3f4f6;
-    height: fit-content;
-    position: sticky;
-    top: 20px;
-}
-
-.summary-line {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    color: #4b5563;
-    font-size: 15px;
-}
-
-.summary-line.total {
-    font-weight: bold;
-    color: #111827;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 16px;
-    margin-top: 16px;
-    font-size: 18px;
-}
-
-.summary-line.total span:last-child {
-    color: #2563eb;
-}
-
-/* Promo Code */
-.promo-code {
-    display: flex;
-    gap: 8px;
-    margin: 24px 0;
-}
-
-.promo-code input {
-    flex-grow: 1;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background-color: #f9fafb;
-}
-
-.btn-add {
-    padding: 10px 16px;
-    background-color: #e5e7eb;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #374151;
-}
-
-/* Checkout Buttons */
-.btn-checkout, .btn-checkout-large {
-    width: 100%;
-    padding: 16px;
-    background-color: #dcfce7; /* Light green to match your flash messages */
-    color: #166534;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-checkout:hover, .btn-checkout-large:hover {
-    background-color: #bbf7d0;
-}
-
-.btn-checkout-large {
-    margin-top: 10px;
-    background-color: #ffffff;
-    color: #111827;
-    border-color: #d1d5db;
-}
-
-.btn-checkout-large:hover {
-    background-color: #f9fafb;
-}
-/* =========================================
-   7. Dashboard Upload Form Styling
+   7. Form Styling (Dashboard & Auth)
 ========================================= */
 .listing-form {
     display: flex;
@@ -629,6 +397,7 @@ body {
 }
 
 .listing-form input[type="text"],
+.listing-form input[type="password"],
 .listing-form input[type="number"],
 .listing-form select,
 .listing-form textarea {
@@ -660,43 +429,13 @@ body {
 }
 
 /* =========================================
-   8. THIS WAS MISSING: Responsive Design
-========================================= */
-@media (max-width: 850px) {
-    /* Stack the dashboard columns */
-    .dashboard-layout, .product-split-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    /* Stop the sidebar from being sticky when it drops to the bottom */
-    .recent-sidebar {
-        position: static;
-        margin-top: 20px;
-    }
-
-    /* Stack the 3-part form row on smaller screens */
-    .form-row {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    /* Make the navigation bar elements wrap gracefully */
-    .navbar {
-        flex-direction: column;
-        gap: 15px;
-        padding: 15px 20px;
-    }
-}
-
-/* =========================================
-   9. Auth Pages (Login & Signup)
+   8. Auth Pages (Login & Signup)
 ========================================= */
 .auth-container {
     max-width: 450px;
     margin: 60px auto;
 }
 
-/* Make sure the wrapper takes up the full width */
 .password-wrapper {
     position: relative;
     display: flex;
@@ -704,23 +443,8 @@ body {
     width: 100%; 
 }
 
-/* Force the password input to match the username input perfectly */
 .password-wrapper input {
-    width: 100%;
-    padding: 12px;
-    padding-right: 40px; /* Leaves space so text doesn't hide behind the icon! */
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background-color: #f9fafb;
-    font-size: 14px;
-    color: #374151;
-    transition: border-color 0.2s;
-}
-
-.password-wrapper input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    background-color: #ffffff;
+    padding-right: 40px; 
 }
 
 .toggle-password {
@@ -757,9 +481,6 @@ body {
     text-decoration: underline;
 }
 
-/* =========================================
-   10. Custom File Upload Button
-========================================= */
 .custom-file-button {
     display: flex;
     align-items: center;
@@ -767,7 +488,7 @@ body {
     width: 100%;
     padding: 20px;
     background-color: #f9fafb;
-    border: 2px dashed #9ca3af; /* Adds a highly visible dashed outline */
+    border: 2px dashed #9ca3af; 
     border-radius: 8px;
     color: #4b5563;
     font-size: 14px;
@@ -778,6 +499,200 @@ body {
 
 .custom-file-button:hover {
     background-color: #eff6ff;
-    border-color: #3b82f6; /* Snaps to a bright blue outline on hover */
+    border-color: #3b82f6; 
     color: #1e3a8a;
+}
+
+/* =========================================
+   9. Profile & Earnings Dashboard 
+========================================= */
+.earnings-wrapper {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.earnings-card {
+    flex: 1;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid;
+    margin-bottom: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.earnings-card.success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.earnings-card.success h4 { color: #166534; margin-bottom: 5px; font-weight: 600;}
+.earnings-card.success .amount { font-size: 28px; font-weight: bold; color: #15803d; }
+
+.earnings-card.info {
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.earnings-card.info h4 { color: #1e40af; margin-bottom: 5px; font-weight: 600;}
+.earnings-card.info .amount { font-size: 28px; font-weight: bold; color: #1d4ed8; }
+
+.sold-grid {
+    margin-bottom: 30px;
+    opacity: 0.75;
+    transition: opacity 0.2s;
+}
+
+.sold-grid:hover {
+    opacity: 1; 
+}
+
+.product-card.sold-item {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+}
+
+.product-card.sold-item .product-image {
+    filter: grayscale(100%);
+    opacity: 0.8;
+}
+
+.product-card.sold-item .product-title {
+    text-decoration: line-through;
+    color: #6b7280;
+}
+
+.sold-badge {
+    font-size: 12px;
+    color: #10b981;
+    font-weight: bold;
+    margin-top: 8px;
+    display: inline-block;
+    background-color: #dcfce7;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.profile-sidebar-header {
+    text-align: center;
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    margin: 0 auto 15px auto;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.profile-stats {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 15px;
+    margin-top: 15px;
+    text-align: left;
+}
+
+.profile-stats p {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 8px;
+}
+
+/* =========================================
+   10. Responsive Design (Mobile)
+========================================= */
+@media (max-width: 850px) {
+    .dashboard-layout, .product-split-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .recent-sidebar {
+        position: static;
+        margin-top: 20px;
+    }
+
+    .form-row, .earnings-wrapper, .filters {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 20px;
+    }
+}
+
+/* Convert 1-column list to stacked card on very small mobile screens */
+@media (max-width: 600px) {
+    .product-card {
+        flex-direction: column;
+    }
+    .product-image {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+/* =========================================
+   11. Modal (Popup) Styling
+========================================= */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex; /* Show the modal */
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.close-modal-btn:hover {
+    color: #111827;
+}
+
+/* Add a specific height for the chart container */
+.chart-container {
+    position: relative;
+    height: 250px;
+    width: 100%;
+    margin-top: 10px;
 }

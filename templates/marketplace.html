@@ -14,7 +14,7 @@
             
             {% if session.get('user_id') %}
                 <a href="/dashboard">My Listings</a>
-                <a href="#">Profile</a>
+                <a href="/profile">Profile</a>
                 <a href="/logout">Logout</a> 
             {% else %}
                 <a href="/">Log In</a>
@@ -83,7 +83,7 @@
                     {% for item in products %}
                     <a href="/product/{{ item.id }}" style="text-decoration: none; color: inherit;">
                         <article class="product-card">
-                            <div class="product-image-placeholder">🖼️</div>
+                            <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="product-image">
                             <div class="product-info">
                                 <h3 class="product-title">{{ item.title }}</h3>
                                 
@@ -116,7 +116,7 @@
                     {% for item in recent_items %}
                     <a href="/product/{{ item.id }}" class="sidebar-card-link">
                         <article class="sidebar-card">
-                            <div class="sidebar-img">🖼️</div>
+                            <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="sidebar-img">
                             <div class="sidebar-info">
                                 <h4 class="sidebar-title">{{ item.title }}</h4>
                                 <p class="sidebar-price">${{ "%.2f"|format(item.price) }}</p>

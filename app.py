@@ -8,7 +8,7 @@ from datetime import date
 app = Flask(__name__)
 app.secret_key = "super_secret_campus_key" 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace_v4.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///marketplace_v5.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- NEW: Image Upload Configuration ---
@@ -172,18 +172,6 @@ def marketplace():
     recent_items = Product.query.order_by(Product.date_added.desc()).limit(3).all()
     return render_template('marketplace.html', products=filtered_products, recent_items=recent_items)
 
-@app.route('/product/<int:product_id>')
-def product_detail(product_id):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-        
-    product = Product.query.get_or_404(product_id)
-    
-    # --- NEW: Fetch the 3 most recent reviews for the seller ---
-    seller_reviews = Review.query.filter_by(seller_username=product.seller).order_by(Review.date_added.desc()).limit(3).all()
-    
-    return render_template('product.html', product=product, reviews=seller_reviews)
-
 # --- UPDATED DASHBOARD ROUTE ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
@@ -253,66 +241,6 @@ def dashboard():
                            cat_labels=list(category_revenue.keys()),
                            cat_data=list(category_revenue.values()))
 
-# --- UNIFIED PROFILE & STOREFRONT ROUTES ---
-@app.route('/profile')
-def profile():
-    # If the user clicks "Profile" in the navbar, redirect them to their own public URL
-    if 'user_id' not in session:
-        flash("Please log in to view your profile.")
-        return redirect(url_for('login'))
-    return redirect(url_for('public_profile', username=session['username']))
-
-@app.route('/user/<username>', methods=['GET', 'POST'])
-def public_profile(username):
-    # Fetch the target user (either yourself or the seller you clicked on)
-    target_user = User.query.filter_by(username=username).first_or_404()
-    
-    # Handle new review submissions (Only for public viewing)
-    if request.method == 'POST':
-        if 'user_id' not in session:
-            flash("You must be logged in to leave a review.")
-            return redirect(url_for('login'))
-            
-        if session.get('username') == target_user.username:
-            flash("You cannot review yourself!")
-            return redirect(url_for('public_profile', username=username))
-            
-        rating = int(request.form.get('rating'))
-        comment = request.form.get('comment')
-        
-        new_review = Review(
-            seller_username=target_user.username,
-            reviewer_username=session['username'],
-            rating=rating,
-            comment=comment,
-            date_added=date.today().strftime("%Y-%m-%d")
-        )
-        db.session.add(new_review)
-        db.session.commit()
-        flash("Review submitted successfully!")
-        return redirect(url_for('public_profile', username=username))
-
-    # Fetch data for the page
-    active_listings = Product.query.filter_by(seller=username, is_sold=False).order_by(Product.date_added.desc()).all()
-    sold_listings = Product.query.filter_by(seller=username, is_sold=True).all()
-    reviews = Review.query.filter_by(seller_username=username).order_by(Review.date_added.desc()).all()
-    
-    # Private data: Only fetch purchase history if viewing your OWN profile
-    purchases = []
-    if session.get('username') == target_user.username:
-        purchases = Product.query.filter_by(buyer_username=target_user.username).order_by(Product.date_added.desc()).all()
-    
-    # Calculate dynamic average rating
-    avg_rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 5.0
-    
-    return render_template('profile.html', 
-                           user=target_user, 
-                           active_listings=active_listings,
-                           sold_listings=sold_listings,
-                           purchases=purchases,
-                           reviews=reviews, 
-                           avg_rating=avg_rating)
-
 # --- PAYMENT & CHECKOUT ROUTES ---
 @app.route('/buy/<int:product_id>', methods=['POST'])
 def buy_product(product_id):
@@ -356,6 +284,65 @@ def checkout_page(product_id):
         return redirect(url_for('product_detail', product_id=product.id))
         
     return render_template('checkout.html', product=product)
+
+@app.route('/product/<int:product_id>')
+def product_detail(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    product = Product.query.get_or_404(product_id)
+    
+    # Fetch the 3 most recent reviews for this seller to display on the product page
+    seller_reviews = Review.query.filter_by(seller_username=product.seller).order_by(Review.date_added.desc()).limit(3).all()
+    
+    return render_template('product.html', product=product, reviews=seller_reviews)
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        flash("Please log in to view your profile.")
+        return redirect(url_for('login'))
+    # Instantly redirect to the unified storefront page
+    return redirect(url_for('public_profile', username=session['username']))
+
+@app.route('/user/<username>', methods=['GET', 'POST'])
+def public_profile(username):
+    target_user = User.query.filter_by(username=username).first_or_404()
+    
+    if request.method == 'POST':
+        if 'user_id' not in session:
+            flash("You must be logged in to leave a review.")
+            return redirect(url_for('login'))
+            
+        if session.get('username') == target_user.username:
+            flash("You cannot review yourself!")
+            return redirect(url_for('public_profile', username=username))
+            
+        new_review = Review(
+            seller_username=target_user.username,
+            reviewer_username=session['username'],
+            rating=int(request.form.get('rating')),
+            comment=request.form.get('comment'),
+            date_added=date.today().strftime("%Y-%m-%d")
+        )
+        db.session.add(new_review)
+        db.session.commit()
+        flash("Review submitted successfully!")
+        return redirect(url_for('public_profile', username=username))
+
+    # Fetch data for the profile page
+    active_listings = Product.query.filter_by(seller=username, is_sold=False).order_by(Product.date_added.desc()).all()
+    sold_listings = Product.query.filter_by(seller=username, is_sold=True).all()
+    reviews = Review.query.filter_by(seller_username=username).order_by(Review.date_added.desc()).all()
+    
+    purchases = []
+    if session.get('username') == target_user.username:
+        purchases = Product.query.filter_by(buyer_username=target_user.username).order_by(Product.date_added.desc()).all()
+    
+    avg_rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 5.0
+    
+    return render_template('profile.html', user=target_user, active_listings=active_listings,
+                           sold_listings=sold_listings, purchases=purchases, reviews=reviews, avg_rating=avg_rating)
 
 if __name__ == '__main__':
     app.run(debug=True)

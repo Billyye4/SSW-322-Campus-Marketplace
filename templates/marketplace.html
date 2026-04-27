@@ -87,11 +87,11 @@
                             <div class="product-info">
                                 <h3 class="product-title">{{ item.title }}</h3>
                                 
-                                <p class="seller-name" style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                                    <span><a href="/user/{{ item.seller }}" style="color: #4b5563; text-decoration: none; font-weight: 600;">@{{ item.seller }}</a></span>
+                                <p class="seller-name" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px;">
+                                    <a href="/user/{{ item.seller }}" style="color: #2563eb; text-decoration: none; font-weight: 600; background-color: #eff6ff; padding: 2px 8px; margin-left: -12px; border-radius: 4px;">@{{ item.seller }}</a>
                                     
-                                    <span style="display: flex; align-items: center; color: #f59e0b; font-weight: bold; gap: 3px;">
-                                        <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 24 24">
+                                    <span style="display: flex; align-items: center; color: #f59e0b; font-weight: bold; gap: 4px;">
+                                        <svg style="width: 15px; height: 15px;" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
                                         </svg>
                                         {{ item.seller_rating }}

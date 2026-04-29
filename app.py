@@ -144,6 +144,7 @@ def marketplace():
     if 'user_id' not in session:
         flash("Please log in to view the marketplace.")
         return redirect(url_for('login'))
+        
     search_query = request.args.get('search', '').lower()
     condition_query = request.args.get('condition', 'All Conditions')
     category_query = request.args.get('category', 'All Categories')
@@ -153,6 +154,15 @@ def marketplace():
     products = Product.query.filter_by(is_sold=False).all()
     filtered_products = []
     
+    # --- NEW: Calculate the rating for every product dynamically ---
+    for product in products:
+        all_reviews = Review.query.filter_by(seller_username=product.seller).all()
+        if all_reviews:
+            product.seller_rating = sum(r.rating for r in all_reviews) / len(all_reviews)
+        else:
+            product.seller_rating = 0
+            
+    # --- EXISTING FILTER LOGIC ---
     for product in products:
         matches_search = search_query in product.title.lower() or search_query in product.description.lower() or search_query == ''
         matches_condition = condition_query == 'All Conditions' or condition_query == product.condition
@@ -160,6 +170,7 @@ def marketplace():
         if matches_search and matches_condition and matches_category:
             filtered_products.append(product)
 
+    # --- EXISTING SORT LOGIC ---
     if sort_query == 'Price: Low to High':
         filtered_products.sort(key=lambda x: x.price)
     elif sort_query == 'Price: High to Low':
@@ -292,6 +303,15 @@ def product_detail(product_id):
         
     product = Product.query.get_or_404(product_id)
     
+    # --- NEW: Calculate the average rating dynamically ---
+    all_reviews = Review.query.filter_by(seller_username=product.seller).all()
+    if all_reviews:
+        # Calculate the real average and overwrite the default 0.0
+        product.seller_rating = sum(r.rating for r in all_reviews) / len(all_reviews)
+    else:
+        # If there are no reviews, set to 0 (This triggers your "New Seller" HTML fix!)
+        product.seller_rating = 0
+        
     # Fetch the 3 most recent reviews for this seller to display on the product page
     seller_reviews = Review.query.filter_by(seller_username=product.seller).order_by(Review.date_added.desc()).limit(3).all()
     

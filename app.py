@@ -359,7 +359,7 @@ def public_profile(username):
     if session.get('username') == target_user.username:
         purchases = Product.query.filter_by(buyer_username=target_user.username).order_by(Product.date_added.desc()).all()
     
-    avg_rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 5.0
+    avg_rating = sum(r.rating for r in reviews) / len(reviews) if reviews else 0
     
     return render_template('profile.html', user=target_user, active_listings=active_listings,
                            sold_listings=sold_listings, purchases=purchases, reviews=reviews, avg_rating=avg_rating)

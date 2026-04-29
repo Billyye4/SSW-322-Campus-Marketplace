@@ -94,12 +94,18 @@
                     <h3 style="margin-bottom: 5px; color: #111827;">{{ user.username }}</h3>
                     <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Verified Student</p>
                     
-                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg style="width: 20px; height: 20px;" fill="#f59e0b" viewBox="0 0 24 24">
-                            <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
-                        </svg>
-                        <span style="font-weight: bold; font-size: 18px; color: #92400e;">{{ "%.1f"|format(avg_rating) }}</span>
-                        <span style="color: #b45309; font-size: 14px;">({{ reviews|length }} reviews)</span>
+                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <svg style="width: 20px; height: 20px;" fill="#f59e0b" viewBox="0 0 24 24">
+                                <path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
+                            </svg>
+                            {% if avg_rating == 0 %}
+                                <span style="font-weight: bold; font-size: 16px; color: #92400e; white-space: nowrap;">New Seller</span>
+                            {% else %}
+                                <span style="font-weight: bold; font-size: 18px; color: #92400e;">{{ "%.1f"|format(avg_rating) }}</span>
+                            {% endif %}
+                        </div>
+                        <span style="color: #b45309; font-size: 13px;">({{ reviews|length }} reviews)</span>
                     </div>
 
                     <div class="profile-stats">

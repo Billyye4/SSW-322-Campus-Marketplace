@@ -9,19 +9,23 @@
 <body>
 
     <header class="navbar">
-        <h1>Campus Marketplace</h1>
+        <div class="nav-left">
+            <h1>Campus Marketplace</h1>
+            <nav class="nav-links">
+                <a href="/marketplace">Marketplace</a>
+                {% if session.get('user_id') %}
+                    <a href="/dashboard">My Listings</a>
+                {% endif %}
+            </nav>
+        </div>
         <nav class="nav-links">
-            <a href="/marketplace">Marketplace</a>
-            
             {% if session.get('user_id') %}
-                <a href="/dashboard">My Listings</a>
                 <a href="/profile">Profile</a>
                 <a href="/logout">Logout</a> 
             {% else %}
                 <a href="/">Log In</a>
                 <a href="/signup">Sign Up</a>
             {% endif %}
-            
         </nav>
     </header>
 

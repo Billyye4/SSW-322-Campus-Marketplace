@@ -82,14 +82,6 @@
                 {% else %}
                     <a href="/checkout/{{ product.id }}" class="buy-button" style="display: inline-block; text-align: center; text-decoration: none;">Buy Now</a>
                 {% endif %}
-
-                {% if session.get('username') == product.seller %}
-                    <button class="buy-button" style="background-color: #9ca3af; cursor: not-allowed;" disabled>This is your listing</button>
-                {% else %}
-                    <a href="/checkout/{{ product.id }}" class="buy-button">Buy Now</a>
-                {% endif %}
-
-               <a href="/checkout/{{ product.id }}" class="buy-button" style="display: inline-block; text-align: center; text-decoration: none;">Buy Now</a>
             </div>
 
         </div>
